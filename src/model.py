@@ -15,13 +15,13 @@ class OPERATION(Enum):
         elif self == OPERATION.SUB:
             resultado = num1 - num2
         elif self == OPERATION.MUL:
-            resultado =  num1 * num2    
+            resultado = num1 * num2
         elif self == OPERATION.DIV:
-            resultado =  num1 / num2
+            resultado = num1 / num2
         elif self == OPERATION.MOD:
             resultado = num1 % num2
         return resultado
-    
+
 
 """Clase Calculo
 
@@ -39,6 +39,7 @@ class OPERATION(Enum):
     guardar_operation(value: OPERATION | str)
     hacer_calculo()
 """
+
 
 class STATUS_CALCULO(Enum):
     WAITING_N1 = auto()
@@ -67,23 +68,44 @@ class Calculo:
         self.status = STATUS_CALCULO.WAITING_N1
         self.resultado = None
 
+    def _select_operation(self, operation: OPERATION | None) -> None:
+        if self.num1 is not None and self.num2 is None:
+            self.operation = operation
+            self.status = STATUS_CALCULO.WAITING_N2
+        elif self.num2 is not None:
+            self.num1 = self.operation.calcular(self.num1, self.num2)
+            self.operation = operation
+            self.num2 = None
+            self.status = STATUS_CALCULO.WAITING_N2
+
 
     def add_char(self, value: str):
-
-        for operation in OPERATION :
-            if value == operation.value:
-                self.operation = operation
-                self.status = STATUS_CALCULO.WAITING_N1
-                return
         try:
-            if self.status == STATUS_CALCULO.WAITING_OP:
+            if value in [op.value for op in OPERATION]:
+                self._select_operation(OPERATION(value))
+                
+        
+            elif value == "=" and self.num1 and self.num2 and self.operation:
+                self.num1 = self.operation.calcular(self.num1, self.num2)
+                self.num2 = None
+                self.operation = None
+                self.status = STATUS_CALCULO.WAITING_OP
+            elif value == "clear":
+                self.num1 = self.num2 = self.operation = self.resultado = None
+                self.status = STATUS_CALCULO.WAITING_N1
+            
+            elif self.status == STATUS_CALCULO.WAITING_OP:
                 self.num1 = self._concatenar(self.num1, value)
-            else:
+            elif self.status == STATUS_CALCULO.WAITING_N1:
                 self.num1 = rn(value)
-            self.status = STATUS_CALCULO.WAITING_OP
+                self.status = STATUS_CALCULO.WAITING_OP
+            elif self.status == STATUS_CALCULO.WAITING_N2:
+                self.num2 = rn(value)
+                self.status = STATUS_CALCULO.WAITING_SOLUTION
+            else:
+                self.num2 = self._concatenar(self.num2, value)
+
+
         except ValueError:
             pass
-
-
-                
-
+        
