@@ -1,11 +1,11 @@
 import tkinter as tk
-
 # --- Jerarquía de widgets ---
 # -root --> ventana que contiene la aplicación
   #Calculator : control de la calculadora
     #Display : Pantalla
 #   -Keyboard: Teclado con n teclas
 #     -[CalcButtons]
+
 
 
 WIDTH_BUTTON = 90
@@ -15,23 +15,30 @@ class CalcButton(tk.Frame):
     def __init__(self, parent, text : str, clicked):
         super().__init__(parent, width=WIDTH_BUTTON, height=HEIGHT_BUTTON) 
         self.pack_propagate(False) 
-        btn = tk.Button(self, text=text,  command= lambda: clicked(text) )
-        btn.pack(fill=tk.BOTH, expand=True) 
+        self.btn = tk.Button(self, text=text,  command= lambda: clicked(text) )
+        self.btn.pack(fill=tk.BOTH, expand=True) 
+        self.text = text
+
+    def _click(self):
+        self.btn.invoke()
 
 
 
 # Clase Keyboard 
 class Keyboard(tk.Frame):
-    def __init__(self, parent, clicked_button):
-        super().__init__(parent) 
+    def __init__(self, parent, clicked_button, rows=5, cols=3, labels = None):
+        super().__init__(parent, width= cols * WIDTH_BUTTON, height= rows * HEIGHT_BUTTON) 
+        if labels :
+            self.labels = labels
 
-      
         self.buttons = [
             ('Clear', 0, 0), ('I', 1, 0), ('X', 2, 0), ('c', 3, 0), ('M', 4, 0), # Columna 0
             ('%', 0, 1), ('V', 1, 1), ('L', 2, 1), ('D', 3, 1), ('·', 4, 1), # Columna 1
             ('/', 0, 2), ('*', 1, 2), ('-', 2, 2), ('+', 3, 2), ('=', 4, 2)  # Columna 2
         ]
 
+        self.clicked_buttons = clicked_button
+      
         for i in range(3): # Para las 3 columnas de botones
             self.grid_columnconfigure(i, weight=1)
         for i in range(5): # Para las 5 filas de botones
@@ -44,7 +51,12 @@ class Keyboard(tk.Frame):
             # Colocamos el botón en el grid de este Keyboard
             button.grid(row=row, column=column, sticky='nsew', padx=3, pady=3)
 
+    def _click(self, label: str):
+        self.clicked_buttons(label)
+   
 
+
+            
 
 
 
@@ -62,6 +74,30 @@ class Display(tk.Frame):
     def set_text(self, value : str):
         self.label["text"] = value
 
+class Calculator(tk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.display = Display(self)
+        self.display.pack()
+        self._clicked = None
+        self.keywoard = Keyboard(self, self.__on_click)
+        self.keywoard.pack()
+
+    def set_text(self, text: str ):
+        self.display.set_text(text)
+
+    def __on_click(self, text: str):
+        # self._clicked(text)
+        if text == 'Clear':
+            self.display.set_text("")
+        else:
+            current = self.display.get_text()
+            self.display.set_text(current + text)
+
+    def set_clicked(self, clicked: callable):
+        self._clicked = clicked
+
+        
 
 # Funciones de manejo de eventos  
 def get_value(value: str , display_instance: Display):
@@ -76,6 +112,12 @@ def get_value(value: str , display_instance: Display):
 def ha_sido_pulsado( label:str, display_instance):
     print(f'**** {label} ***')
     get_value(label, display_instance)
+
+
+
+
+
+
 
 # Configuración de la aplicación principal
 if __name__ == "__main__":
@@ -98,5 +140,6 @@ if __name__ == "__main__":
     keyboard = Keyboard(root, lambda click_value: ha_sido_pulsado(click_value, show_display))
 # Colocamos el 'keyboard' en la fila 0, columna 0 del grid de 'root'
     keyboard.grid(row=1, column=0, sticky="nsew", padx=3, pady=3) 
-
     root.mainloop()
+
+

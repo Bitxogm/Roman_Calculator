@@ -4,7 +4,8 @@
 
 import pytest
 import tkinter as tk
-from src.view import Display
+from random import randint
+from src.view import Display, Calculator, CalcButton, Keyboard
 
 
 @pytest.fixture
@@ -16,8 +17,53 @@ def root():
 
 def test_Display_set_value(root):
   display = Display(root)
-  assert display.get_text() == ''
+  assert display.get_text() == ""
 
   display.set_text('Hi, Otaku')
-  assert display.get_text ()== 'Hi, Otaku'
+  assert display.get_text () == 'Hi, Otaku'
 
+
+def test_create_calculator(root):
+  calculator = Calculator(root)
+  assert hasattr(calculator, "set_text")
+  assert hasattr(calculator, "set_clicked")
+
+  assert callable(getattr(calculator, "set_text"))
+  assert callable(getattr(calculator, "set_clicked"))
+
+def test_calculator_show_test(root):
+  calculator = Calculator(root)
+  assert calculator.display.get_text() == ""
+  calculator.set_text("Hi, Otaku&Obama")
+  assert calculator.display.get_text() == "Hi, Otaku&Obama"
+
+
+def test_calculator_click(root):
+  clicks = []
+  calculator = Calculator(root)
+  calculator.set_clicked(lambda x: clicks.append(x))
+  calculator._clicked("I")
+  calculator._clicked("V")
+
+  assert clicks == ["I", "V"]
+  
+def test_click_CalButton(root):
+  clicks = []
+
+  cButton = CalcButton(root, "?", lambda x: clicks.append(x))
+  nclicks = randint(3, 12)
+  for i in range(nclicks):
+    cButton._click()
+
+  assert clicks == nclicks * ["?"]
+
+
+def test_click_Keyboard(root):
+  clicks = []
+  kb  = Keyboard(root, lambda x: clicks.append(x), rows=2, cols=2, labels = [ "a", "d", "b,", "c"] )
+  kb._click("a")
+  kb._click("d")
+  kb._click("b")
+  kb._click("c")
+
+  assert clicks ==  ["a", "d", "b", "c"]
